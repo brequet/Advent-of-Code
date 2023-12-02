@@ -1,6 +1,7 @@
 package main
 
 import (
+	"aoc-2023-go/utils"
 	"bufio"
 	"fmt"
 	"log"
@@ -10,7 +11,7 @@ import (
 )
 
 func main() {
-	file, err := os.Open("./go/day-02/input")
+	file, err := os.Open("./day-02/input")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -22,7 +23,8 @@ func main() {
 		sum += getInputPower(scanner.Text())
 	}
 
-	fmt.Print("res: ", sum)
+	fmt.Println("res: ", sum)
+	utils.Hello()
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
