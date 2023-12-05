@@ -1,6 +1,7 @@
 package main
 
 import (
+	"aoc-2023-go/utils"
 	"bufio"
 	"fmt"
 	"log"
@@ -8,68 +9,152 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
+type Range struct {
+	sourceStart int
+	destStart   int
+	rangeLength int
+}
+
 func main() {
-	file, err := os.Open("./day-04/input")
+	file, err := os.Open("./day-05/input")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer file.Close()
 
-	sum := 0
-	accCardToCount := map[int]int{}
+	var seedToSoil, soilToFertilizer, fertilizerToWater, waterToLight, lightToTemperature, temperatureToHumidity, humidityToLocation []Range
+	var rangesPointer *[]Range
+
+	reNumRow := regexp.MustCompile(`(\d+)`)
+	seeds := []int{}
+	mod := ""
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		sum += getCardPoint(scanner.Text(), accCardToCount)
-	}
-	fmt.Println("result: ", sum, "30")
+		line := scanner.Text()
+		// fmt.Println("Reading line:", line)
+		if strings.HasPrefix(line, "seeds:") {
+			fmt.Println(time.Now(), "Began seeds counting")
+			re := regexp.MustCompile(`(\d+)`)
+			matches := utils.Map[string, int](re.FindAllString(line, -1), func(str string) int {
+				n, err := strconv.Atoi(str)
+				if err != nil {
+					panic(err)
+				}
+				return n
+			})
+			for i := 0; i < len(matches)/2; i++ {
+				start, size := matches[i*2], matches[i*2+1]
+				for j := start; j < start+size; j++ {
+					seeds = append(seeds, j)
+				}
+			}
+			fmt.Println(time.Now(), "Finished seeds counting")
+			continue
+		} else if strings.HasPrefix(line, "seed-") {
+			mod = "seed"
+		} else if strings.HasPrefix(line, "soil-") {
+			mod = "soil"
+		} else if strings.HasPrefix(line, "fertilizer-") {
+			mod = "fertilizer"
+		} else if strings.HasPrefix(line, "water-") {
+			mod = "water"
+		} else if strings.HasPrefix(line, "light-") {
+			mod = "light"
+		} else if strings.HasPrefix(line, "temperature-") {
+			mod = "temperature"
+		} else if strings.HasPrefix(line, "humidity-") {
+			mod = "humidity"
+		} else if line == "" {
+			mod = ""
+		}
 
+		matchesNumRow := utils.Map[string, int](reNumRow.FindAllString(line, -1), func(str string) int {
+			n, err := strconv.Atoi(str)
+			if err != nil {
+				panic(err)
+			}
+			return n
+		})
+		if !strings.HasPrefix(line, "seeds:") && len(matchesNumRow) > 0 {
+			if mod == "seed" {
+				rangesPointer = &seedToSoil
+			} else if mod == "soil" {
+				rangesPointer = &soilToFertilizer
+			} else if mod == "fertilizer" {
+				rangesPointer = &fertilizerToWater
+			} else if mod == "water" {
+				rangesPointer = &waterToLight
+			} else if mod == "light" {
+				rangesPointer = &lightToTemperature
+			} else if mod == "temperature" {
+				rangesPointer = &temperatureToHumidity
+			} else if mod == "humidity" {
+				rangesPointer = &humidityToLocation
+			} else {
+				fmt.Println("PROBLEM SOULD NOT BE HERE")
+				rangesPointer = nil
+			}
+
+			processInput(matchesNumRow, rangesPointer)
+		}
+	}
+	fmt.Println("number of seeds", len(seeds))
+
+	lowestSeed, lowestLocation := int(^uint(0)>>1), int(^uint(0)>>1)
+	for _, seed := range seeds {
+		location := getLocationForSeed(seed, seedToSoil, soilToFertilizer, fertilizerToWater, waterToLight, lightToTemperature, temperatureToHumidity, humidityToLocation)
+		if location < lowestLocation {
+			lowestLocation = location
+			lowestSeed = seed
+		}
+		// fmt.Println("location for", seed, ":", location)
+	}
+	fmt.Println()
+	fmt.Println("Solution: seed", lowestSeed, "for lowest location:", lowestLocation, "/ 46")
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func getCardPoint(line string, accCardToCount map[int]int) int {
-	r := strings.Split(line, ":")[1]
-	reCard := regexp.MustCompile("(\\d+):")
-	card := reCard.FindStringSubmatch(line)[1]
-
-	cardIndex, err := strconv.Atoi(card)
-	if err != nil {
-		log.Fatal(err)
+func processInput(nums []int, ranges *[]Range) {
+	if (*ranges) == nil {
+		(*ranges) = []Range{}
 	}
-
-	numberOfCard, ok := accCardToCount[cardIndex]
-	if ok {
-		numberOfCard++
-	} else {
-		numberOfCard = 1
+	destStart, sourceStart, rangeLength := nums[0], nums[1], nums[2]
+	newRange := Range{
+		sourceStart: sourceStart,
+		destStart:   destStart,
+		rangeLength: rangeLength,
 	}
+	(*ranges) = append((*ranges), newRange)
+}
 
-	pipe := strings.Split(r, "|")
-	re := regexp.MustCompile("(\\d+)")
-	winningNumbers := re.FindAllString(pipe[0], -1)
-	myNumbers := re.FindAllString(pipe[1], -1)
+func getLocationForSeed(seed int, seedToSoil, soilToFertilizer, fertilizerToWater, waterToLight, lightToTemperature, temperatureToHumidity, humidityToLocation []Range) int {
+	soil := getValueForKey(seed, seedToSoil)
+	fertilizer := getValueForKey(soil, soilToFertilizer)
+	water := getValueForKey(fertilizer, fertilizerToWater)
+	light := getValueForKey(water, waterToLight)
+	temperature := getValueForKey(light, lightToTemperature)
+	humidity := getValueForKey(temperature, temperatureToHumidity)
+	location := getValueForKey(humidity, humidityToLocation)
 
-	matchingCount := 0
-	for _, myNum := range myNumbers {
-		for _, winningNum := range winningNumbers {
-			if myNum == winningNum {
-				matchingCount++
-				break
-			}
+	return location
+}
+
+func getValueForKey(key int, ranges []Range) int {
+	var val int
+	for _, aRange := range ranges {
+		diff := key - aRange.sourceStart
+		if diff >= 0 && diff < aRange.rangeLength {
+			val = aRange.destStart + diff
 		}
 	}
 
-	for j := 0; j < numberOfCard; j++ {
-		for i := cardIndex + 1; i < cardIndex+matchingCount+1; i++ {
-			if _, ok := accCardToCount[i]; !ok {
-				accCardToCount[i] = 0
-			}
-			accCardToCount[i] = accCardToCount[i] + 1
-		}
+	if val == 0 {
+		val = key
 	}
-
-	return numberOfCard
+	return val
 }
