@@ -82,7 +82,7 @@ func extractFromLine(line string, y int) (nums []Number) {
 
 func computeGear(inputArr []string, num Number, gears map[string][]int) {
 	for i := num.x; i < num.x+len(num.value); i++ {
-		gearCoordinate := isGearClose(inputArr, i, num.y, gears)
+		gearCoordinate := getGearCoordinateIfOneClose(inputArr, i, num.y, gears)
 		if gearCoordinate != "" {
 			if _, ok := gears[gearCoordinate]; !ok {
 				gears[gearCoordinate] = []int{}
@@ -97,7 +97,7 @@ func computeGear(inputArr []string, num Number, gears map[string][]int) {
 	}
 }
 
-func isGearClose(inputArr []string, x, y int, gears map[string][]int) (gearCoordinate string) {
+func getGearCoordinateIfOneClose(inputArr []string, x, y int, gears map[string][]int) (gearCoordinate string) {
 	xs := []int{x - 1, x, x + 1}
 	ys := []int{y - 1, y, y + 1}
 	for _, i := range xs {

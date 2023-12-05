@@ -5,26 +5,27 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 	"strconv"
+	"strings"
 )
 
 func main() {
-	file, err := os.Open("./go/day-01/input")
+	file, err := os.Open("./day-01/input")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer file.Close()
 
-	sum := 0
+	// sum := 0
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		line := scanner.Text()
-		res := computeValue(line)
-		sum += res
-		fmt.Println(line, " - ", res)
+		// line := scanner.Text()
+		// res := computeValue(line)
+		// sum += res
+		// fmt.Println(line, " - ", res)
 	}
-	fmt.Print(sum)
+	// fmt.Print(sum, " - 54980")
+	fmt.Println(computeValue("4threethreegctxg3dmbm1"))
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
@@ -32,11 +33,11 @@ func main() {
 }
 
 func computeValue(input string) int {
-	re := regexp.MustCompile("\\d|one|two|three|four|five|six|seven|eight|nine")
-	res := re.FindAllString(input, -1)
-	fmt.Println(res)
-	firstNum := getIntFromString(res[0])
-	lastNum := getIntFromString(res[len(res)-1])
+	words := []string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "1", "2", "3", "4", "5", "6", "7", "8", "9"}
+	parsedWords := findWordsInText(input, words)
+	fmt.Println(parsedWords)
+	firstNum := getIntFromString(parsedWords[getMinKey(parsedWords)][0])
+	lastNum := getIntFromString(parsedWords[getMaxKey(parsedWords)][0])
 
 	result, err := strconv.Atoi(firstNum + lastNum)
 	if err != nil {
@@ -63,4 +64,38 @@ func getIntFromString(number string) string {
 	} else {
 		return number
 	}
+}
+
+func findWordsInText(text string, words []string) map[int][]string {
+	fmt.Println("findWordsInText")
+	results := make(map[int][]string)
+	for _, word := range words {
+		index := strings.Index(text, word)
+		for index >= 0 {
+			fmt.Println("word", word, "index", index)
+			results[index] = append(results[index], word)
+			index = strings.Index(text[index+1:], word)
+		}
+	}
+	return results
+}
+
+func getMinKey(aMap map[int][]string) int {
+	min := 9999
+	for k, _ := range aMap {
+		if k < min {
+			min = k
+		}
+	}
+	return min
+}
+
+func getMaxKey(aMap map[int][]string) int {
+	max := -1
+	for k, _ := range aMap {
+		if k > max {
+			max = k
+		}
+	}
+	return max
 }
