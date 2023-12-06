@@ -1,13 +1,28 @@
 package utils
 
 import (
-	"fmt"
+	"bufio"
 	"log"
+	"os"
 	"strconv"
 )
 
-func Hello() {
-	fmt.Println("Hello, World!")
+func GetInputAsSlice(filePath string) (res []string) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		res = append(res, scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+	return res
 }
 
 func Map[T, O any](things []T, mapper func(thing T) O) []O {
@@ -24,4 +39,8 @@ func StrToInt(str string) int {
 		log.Fatal(err)
 	}
 	return n
+}
+
+func StrSliceToIntSlice(strSlice []string) []int {
+	return Map(strSlice, StrToInt)
 }

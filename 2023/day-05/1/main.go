@@ -18,7 +18,7 @@ type Range struct {
 }
 
 func main() {
-	file, err := os.Open("./day-05/input")
+	file, err := os.Open("./2023/day-05/input")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -87,17 +87,14 @@ func main() {
 				rangesPointer = &temperatureToHumidity
 			} else if mod == "humidity" {
 				rangesPointer = &humidityToLocation
-			} else if mod == "" {
+			} else {
 				fmt.Println("PROBLEM SOULD NOT BE HERE")
 				rangesPointer = nil
-			} else {
-				fmt.Println("NANNIIII ????")
 			}
 
 			processInput(matchesNumRow, rangesPointer)
 		}
 	}
-	fmt.Println(seedToSoil)
 
 	lowestSeed, lowestLocation := int(^uint(0)>>1), int(^uint(0)>>1)
 	for _, seed := range seeds {
@@ -106,7 +103,6 @@ func main() {
 			lowestLocation = location
 			lowestSeed = seed
 		}
-		fmt.Println("location for", seed, ":", location)
 	}
 	fmt.Println()
 	fmt.Println("Solution: seed", lowestSeed, "for lowest location:", lowestLocation, "/88151870")

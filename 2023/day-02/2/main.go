@@ -1,7 +1,6 @@
 package main
 
 import (
-	"aoc-2023-go/utils"
 	"bufio"
 	"fmt"
 	"log"
@@ -24,7 +23,6 @@ func main() {
 	}
 
 	fmt.Println("res: ", sum)
-	utils.Hello()
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
