@@ -19,7 +19,7 @@ type Range struct {
 }
 
 func main() {
-	file, err := os.Open("./day-05/input")
+	file, err := os.Open("./2023/day-05/input")
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	input := utils.GetInputAsSlice("./day-06/input")
+	input := utils.GetInputAsSlice("./2023/day-06/input")
 
 	time := utils.StrToInt(strings.Replace(strings.Split(input[0], ":")[1], " ", "", -1))
 	distance := utils.StrToInt(strings.Replace(strings.Split(input[1], ":")[1], " ", "", -1))
