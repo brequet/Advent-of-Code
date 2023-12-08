@@ -44,3 +44,22 @@ func StrToInt(str string) int {
 func StrSliceToIntSlice(strSlice []string) []int {
 	return Map(strSlice, StrToInt)
 }
+
+// greatest common divisor (GCD) via Euclidean algorithm
+func GCD(a, b int) int {
+	for b != 0 {
+		t := b
+		b = a % b
+		a = t
+	}
+	return a
+}
+
+// find Least Common Multiple (LCM) via GCD
+func LCM(numbers ...int) int {
+	result := numbers[0]
+	for i := 1; i < len(numbers); i++ {
+		result = result * numbers[i] / GCD(result, numbers[i])
+	}
+	return result
+}
