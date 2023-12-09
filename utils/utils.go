@@ -63,3 +63,14 @@ func LCM(numbers ...int) int {
 	}
 	return result
 }
+
+func GetLastElement[T any](list []T) T {
+	return list[len(list)-1]
+}
+
+func ReverseList[T any](list []T) (res []T) {
+	for i := len(list) - 1; i >= 0; i-- {
+		res = append(res, list[i])
+	}
+	return res
+}
