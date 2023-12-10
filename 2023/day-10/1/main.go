@@ -20,150 +20,161 @@ func main() {
 }
 
 type Node struct {
-	value          byte
-	row, col       int
-	previous, next *Node
+	row, col  int
+	isVisited bool
 }
 
 func (n Node) String() string {
-	var previous, next byte
-	if n.previous != nil {
-		previous = n.previous.value
+	if !n.isVisited {
+		return fmt.Sprintf("(., .)")
+	} else {
+		return fmt.Sprintf("(%d, %d)", n.row, n.col)
 	}
-	if n.next != nil {
-		next = n.next.value
-	}
-	return fmt.Sprintf("Node{value: %c, row: %d, col: %d, previous: %c, next: %c}", n.value, n.row, n.col, previous, next)
 }
 
 func solve(input []string) int {
-	startNode := findStartingNode(input)
-	fmt.Println(startNode)
+	sRow, sCol := findStartingNode(input)
+	fmt.Println("Starting at", sRow, sCol)
 
-	findLoop(input, startNode)
+	mat := buildAdjacencyMatrix(input, sRow, sCol)
+	printMat(mat)
 
 	return 0
 }
 
-func findStartingNode(input []string) Node {
+func printMat[T any](mat [][]T) {
+	for _, row := range mat {
+		for _, node := range row {
+			fmt.Print(node)
+		}
+		fmt.Println()
+	}
+}
+
+func findStartingNode(input []string) (int, int) {
 	for i, row := range input {
 		for j, e := range row {
 			if e == 'S' {
-				return Node{
-					value: 'S',
-					row:   i,
-					col:   j,
-				}
+				return i, j
 			}
 		}
 	}
 	log.Fatalln("Could not found starting node !")
-	return Node{}
+	return 0, 0
 }
 
-func findLoop(input []string, startNode Node) {
-	nextNode1 := findNextNeighbours(input, startNode)
-	startNode.next = &nextNode1
-	var currentNodeAddr *Node = &nextNode1
-	for currentNodeAddr.value != 'S' {
-		fmt.Printf("Iteration on: %s\n", *currentNodeAddr)
-		nextNode := findNextNeighbours(input, *currentNodeAddr)
-		currentNodeAddr.next = &nextNode
-
-		fmt.Printf("\t--> next %s\n", nextNode)
-		fmt.Printf("\t\t\t--> startNode %s\n", startNode)
-		if nextNode.next.value == 'S' {
-			fmt.Printf("\t\t setting previous to %s\n", currentNodeAddr)
-			startNode.previous = currentNodeAddr
-		}
-
-		currentNodeAddr = &nextNode
+func buildAdjacencyMatrix(input []string, sRow, sCol int) [][]Node {
+	// init matrix
+	mat := make([][]Node, len(input))
+	for i := range mat {
+		mat[i] = make([]Node, len(input[0]))
 	}
-	fmt.Println("start", startNode)
+
+	isLoopDone := false
+	rowCurrent, colCurrent := sRow, sCol
+	i := 0
+	for !isLoopDone {
+		fmt.Printf("Iteration [%d]: (%d, %d) %c\n", i, rowCurrent, colCurrent, input[rowCurrent][colCurrent])
+		rowNext, colNext := findNextCoordinate(input, mat, rowCurrent, colCurrent)
+		nextValue := input[rowNext][colNext]
+		fmt.Printf("\tFound: (%d, %d) %c\n", rowNext, colNext, nextValue)
+		mat[rowCurrent][colCurrent] = Node{row: rowNext, col: colNext, isVisited: true}
+
+		rowCurrent, colCurrent = rowNext, colNext
+		if nextValue == 'S' {
+			isLoopDone = true
+			break
+		}
+		i++
+	}
+
+	return mat
 }
 
-func findNextNeighbours(input []string, node Node) (next Node) {
-	tile := node.value
+func findNextCoordinate(input []string, mat [][]Node, row, col int) (nextRow, nextCol int) {
+	tile := input[row][col]
 	if tile == '|' {
-		next.col = node.col
-		if node.row+1 == node.previous.row {
+		nextCol = col
+		if isVisited(mat, row+1, col) {
 			fmt.Println("↑")
-			next.row = node.row - 1
+			nextRow = row - 1
 		} else {
 			fmt.Println("↓")
-			next.row = node.row + 1
+			nextRow = row + 1
 		}
 	} else if tile == '-' {
-		next.row = node.row
-		if node.col+1 == node.previous.col {
+		nextRow = row
+		if isVisited(mat, row, col+1) {
 			fmt.Println("←")
-			next.col = node.col - 1
+			nextCol = col - 1
 		} else {
 			fmt.Println("→")
-			next.col = node.col + 1
+			nextCol = col + 1
 		}
 	} else if tile == 'L' {
-		if node.row-1 != node.previous.row {
+		if isVisited(mat, row, col+1) {
 			fmt.Println("↑")
-			next.row = node.row - 1
-			next.col = node.col
+			nextRow = row - 1
+			nextCol = col
 		} else {
 			fmt.Println("→")
-			next.row = node.row
-			next.col = node.col + 1
+			nextRow = row
+			nextCol = col + 1
 		}
 	} else if tile == 'J' {
-		if node.row-1 != node.previous.row {
+		if isVisited(mat, row, col-1) {
 			fmt.Println("↑")
-			next.row = node.row - 1
-			next.col = node.col
+			nextRow = row - 1
+			nextCol = col
 		} else {
 			fmt.Println("←")
-			next.row = node.row
-			next.col = node.col - 1
+			nextRow = row
+			nextCol = col - 1
 		}
 	} else if tile == '7' {
-		if node.row+1 != node.previous.row {
+		if isVisited(mat, row, col-1) {
 			fmt.Println("↓")
-			next.row = node.row + 1
-			next.col = node.col
+			nextRow = row + 1
+			nextCol = col
 		} else {
 			fmt.Println("←")
-			next.row = node.row
-			next.col = node.col - 1
+			nextRow = row
+			nextCol = col - 1
 		}
 	} else if tile == 'F' {
-		if node.row+1 != node.previous.col {
+		if isVisited(mat, row, col+1) {
 			fmt.Println("↓")
-			next.row = node.row + 1
-			next.col = node.col
+			nextRow = row + 1
+			nextCol = col
 		} else {
 			fmt.Println("→")
-			next.row = node.row
-			next.col = node.col + 1
+			nextRow = row
+			nextCol = col + 1
 		}
 	} else {
 		fmt.Println("Is starting point, default")
-		rows := []int{node.row - 1, node.row, node.row + 1}
-		cols := []int{node.col - 1, node.col, node.col + 1}
-		for _, row := range rows {
-			if row < 0 || row >= len(input[0]) {
+		rows := []int{row - 1, row, row + 1}
+		cols := []int{col - 1, col, col + 1}
+		for _, cRow := range rows {
+			if cRow < 0 || cRow >= len(input[0]) {
 				continue
 			}
-			for _, col := range cols {
-				if (row == node.row && col == node.col) || col < 0 || col >= len(input) {
+			for _, cCol := range cols {
+				if (cRow == row && cCol == col) || cCol < 0 || cCol >= len(input) {
 					continue
 				}
-				cur := input[row][col]
-				if cur != '.' && cur != node.value {
-					fmt.Printf("isNeighbour: %d %d %c\n", row, col, cur)
-					next.row = row
-					next.col = col
+				cur := input[cRow][cCol]
+				if cur != '.' && cur != input[row][col] {
+					fmt.Printf("\tfound candidate: %d %d %c\n", cRow, cCol, cur)
+					nextRow = cRow
+					nextCol = cCol
 				}
 			}
 		}
 	}
-	next.value = input[next.row][next.col]
-	next.previous = &node
-	return next
+	return nextRow, nextCol
+}
+
+func isVisited(mat [][]Node, row, col int) bool {
+	return mat[row][col].isVisited
 }
