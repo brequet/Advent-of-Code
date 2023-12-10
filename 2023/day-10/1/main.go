@@ -8,7 +8,7 @@ import (
 
 const (
 	DAY             = "10"
-	EXPECTED_RESULT = 4
+	EXPECTED_RESULT = 6815
 )
 
 func main() {
@@ -39,7 +39,9 @@ func solve(input []string) int {
 	mat := buildAdjacencyMatrix(input, sRow, sCol)
 	printMat(mat)
 
-	return 0
+	nbrStepToDo := countNonNullNodes(mat) / 2
+
+	return nbrStepToDo
 }
 
 func printMat[T any](mat [][]T) {
@@ -49,6 +51,17 @@ func printMat[T any](mat [][]T) {
 		}
 		fmt.Println()
 	}
+}
+
+func countNonNullNodes(mat [][]Node) (res int) {
+	for _, row := range mat {
+		for _, node := range row {
+			if node.isVisited {
+				res++
+			}
+		}
+	}
+	return res
 }
 
 func findStartingNode(input []string) (int, int) {
@@ -74,10 +87,10 @@ func buildAdjacencyMatrix(input []string, sRow, sCol int) [][]Node {
 	rowCurrent, colCurrent := sRow, sCol
 	i := 0
 	for !isLoopDone {
-		fmt.Printf("Iteration [%d]: (%d, %d) %c\n", i, rowCurrent, colCurrent, input[rowCurrent][colCurrent])
+		// fmt.Printf("Iteration [%d]: (%d, %d) %c\n", i, rowCurrent, colCurrent, input[rowCurrent][colCurrent])
 		rowNext, colNext := findNextCoordinate(input, mat, rowCurrent, colCurrent)
 		nextValue := input[rowNext][colNext]
-		fmt.Printf("\tFound: (%d, %d) %c\n", rowNext, colNext, nextValue)
+		// fmt.Printf("\tFound: (%d, %d) %c\n", rowNext, colNext, nextValue)
 		mat[rowCurrent][colCurrent] = Node{row: rowNext, col: colNext, isVisited: true}
 
 		rowCurrent, colCurrent = rowNext, colNext
@@ -93,9 +106,12 @@ func buildAdjacencyMatrix(input []string, sRow, sCol int) [][]Node {
 
 func findNextCoordinate(input []string, mat [][]Node, row, col int) (nextRow, nextCol int) {
 	tile := input[row][col]
+	if tile == 'S' {
+		nextRow, nextCol = findStartingPointNeighbour(input, row, col)
+	}
 	if tile == '|' {
 		nextCol = col
-		if isVisited(mat, row+1, col) {
+		if isPrevious(mat, row+1, col, row, col) {
 			fmt.Println("↑")
 			nextRow = row - 1
 		} else {
@@ -104,7 +120,7 @@ func findNextCoordinate(input []string, mat [][]Node, row, col int) (nextRow, ne
 		}
 	} else if tile == '-' {
 		nextRow = row
-		if isVisited(mat, row, col+1) {
+		if isPrevious(mat, row, col+1, row, col) {
 			fmt.Println("←")
 			nextCol = col - 1
 		} else {
@@ -112,7 +128,7 @@ func findNextCoordinate(input []string, mat [][]Node, row, col int) (nextRow, ne
 			nextCol = col + 1
 		}
 	} else if tile == 'L' {
-		if isVisited(mat, row, col+1) {
+		if isPrevious(mat, row, col+1, row, col) {
 			fmt.Println("↑")
 			nextRow = row - 1
 			nextCol = col
@@ -122,7 +138,7 @@ func findNextCoordinate(input []string, mat [][]Node, row, col int) (nextRow, ne
 			nextCol = col + 1
 		}
 	} else if tile == 'J' {
-		if isVisited(mat, row, col-1) {
+		if isPrevious(mat, row, col-1, row, col) {
 			fmt.Println("↑")
 			nextRow = row - 1
 			nextCol = col
@@ -132,7 +148,7 @@ func findNextCoordinate(input []string, mat [][]Node, row, col int) (nextRow, ne
 			nextCol = col - 1
 		}
 	} else if tile == '7' {
-		if isVisited(mat, row, col-1) {
+		if isPrevious(mat, row, col-1, row, col) {
 			fmt.Println("↓")
 			nextRow = row + 1
 			nextCol = col
@@ -142,7 +158,7 @@ func findNextCoordinate(input []string, mat [][]Node, row, col int) (nextRow, ne
 			nextCol = col - 1
 		}
 	} else if tile == 'F' {
-		if isVisited(mat, row, col+1) {
+		if isPrevious(mat, row, col+1, row, col) {
 			fmt.Println("↓")
 			nextRow = row + 1
 			nextCol = col
@@ -151,30 +167,32 @@ func findNextCoordinate(input []string, mat [][]Node, row, col int) (nextRow, ne
 			nextRow = row
 			nextCol = col + 1
 		}
-	} else {
-		fmt.Println("Is starting point, default")
-		rows := []int{row - 1, row, row + 1}
-		cols := []int{col - 1, col, col + 1}
-		for _, cRow := range rows {
-			if cRow < 0 || cRow >= len(input[0]) {
-				continue
-			}
-			for _, cCol := range cols {
-				if (cRow == row && cCol == col) || cCol < 0 || cCol >= len(input) {
-					continue
-				}
-				cur := input[cRow][cCol]
-				if cur != '.' && cur != input[row][col] {
-					fmt.Printf("\tfound candidate: %d %d %c\n", cRow, cCol, cur)
-					nextRow = cRow
-					nextCol = cCol
-				}
-			}
-		}
 	}
 	return nextRow, nextCol
 }
 
-func isVisited(mat [][]Node, row, col int) bool {
-	return mat[row][col].isVisited
+func findStartingPointNeighbour(input []string, row, col int) (int, int) {
+	fmt.Println("Is starting point")
+
+	if row > 0 && utils.Contains([]byte{'|', '7', 'F'}, input[row-1][col]) {
+		// Is above
+		return row - 1, col
+	} else if row < len(input)-1 && utils.Contains([]byte{'|', 'L', 'J'}, input[row+1][col]) {
+		// Is below
+		return row + 1, col
+	} else if col > 0 && utils.Contains([]byte{'-', '7', 'J'}, input[row][col-1]) {
+		// Is left
+		return row, col - 1
+	} else if row < len(input[0])-1 && utils.Contains([]byte{'-', 'L', 'F'}, input[row][col+1]) {
+		// Is right
+		return row, col + 1
+	} else {
+		log.Fatalln("Can't find starting point !")
+		return 0, 0
+	}
+}
+
+func isPrevious(mat [][]Node, row, col, cRow, cCol int) bool {
+	node := mat[row][col]
+	return node.row == cRow && node.col == cCol
 }
