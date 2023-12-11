@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -82,4 +83,13 @@ func Contains[T comparable](s []T, e T) bool {
 		}
 	}
 	return false
+}
+
+func PrintMat[T any](mat [][]T) {
+	for _, row := range mat {
+		for _, node := range row {
+			fmt.Print(node)
+		}
+		fmt.Println()
+	}
 }
