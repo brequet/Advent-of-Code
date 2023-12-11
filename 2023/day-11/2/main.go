@@ -7,7 +7,7 @@ import (
 
 const (
 	DAY             = "11"
-	EXPECTED_RESULT = 8410
+	EXPECTED_RESULT = 840988812853
 )
 
 func main() {
@@ -24,8 +24,8 @@ type Galaxy struct {
 }
 
 func solve(input []string) int {
-	grid := createGridUniverse(input)
-	// printMat(grid)
+	grid, emptyRowIndexes, emptyColIndexes := createGridUniverse(input)
+	printMat(grid)
 
 	galaxies := []Galaxy{}
 	for y, row := range grid {
@@ -36,33 +36,36 @@ func solve(input []string) int {
 		}
 	}
 
+	fmt.Println("number of galaxies to process", len(galaxies), emptyRowIndexes, emptyColIndexes)
+
 	sumShortest := 0
-	for _, galaxy := range galaxies {
-		// closest := findClosest(galaxies, galaxy)
+	for _, g1 := range galaxies {
 		for _, g2 := range galaxies {
-			sumShortest += distance(galaxy, g2)
+			d := distance(g1, g2, emptyRowIndexes, emptyColIndexes)
+			sumShortest += d
 		}
-		// fmt.Println("Closest to", galaxy, "is", closest)
 	}
 
 	return sumShortest / 2
 }
 
-func findClosest(galaxies []Galaxy, galaxy Galaxy) int {
-	minDistance := -1
-	for _, g := range galaxies {
-		distance := distance(galaxy, g)
-		if distance > 0 {
-			if minDistance < 0 || distance < minDistance {
-				minDistance = distance
-			}
+func distance(g1, g2 Galaxy, emptyRowIndexes, emptyColIndexes []int) int {
+	if g1.col == g2.col && g1.row == g2.row {
+		return 0
+	}
+
+	expandedColCrossedCount, expandedRowCrossedCount := 0, 0
+	for _, emptyRowIndex := range emptyRowIndexes {
+		if (g2.row > emptyRowIndex && emptyRowIndex > g1.row) || (g1.row > emptyRowIndex && emptyRowIndex > g2.row) {
+			expandedRowCrossedCount++
 		}
 	}
-	return minDistance
-}
-
-func distance(g1, g2 Galaxy) int {
-	return abs(g2.row-g1.row) + abs(g2.col-g1.col)
+	for _, emptyColIndex := range emptyColIndexes {
+		if (g2.col > emptyColIndex && emptyColIndex > g1.col) || (g1.col > emptyColIndex && emptyColIndex > g2.col) {
+			expandedColCrossedCount++
+		}
+	}
+	return abs(g2.row-g1.row) + abs(g2.col-g1.col) + (expandedColCrossedCount+expandedRowCrossedCount)*(1000000-1)
 }
 
 func abs(n int) int {
@@ -73,7 +76,7 @@ func abs(n int) int {
 	}
 }
 
-func createGridUniverse(input []string) [][]byte {
+func createGridUniverse(input []string) ([][]byte, []int, []int) {
 	// init
 	grid := [][]byte{}
 	for i := range input {
@@ -88,17 +91,6 @@ func createGridUniverse(input []string) [][]byte {
 			emptyRowIndexes = append(emptyRowIndexes, i)
 		}
 	}
-	for _, i := range utils.ReverseList(emptyRowIndexes) {
-		emptyRow := grid[i]
-		for n := 0; n < 1000000-1; n++ {
-			if len(grid) == i {
-				grid = append(grid, emptyRow)
-			} else {
-				tmpGrid := append(grid[:i], emptyRow)
-				grid = append(tmpGrid, grid[i:]...)
-			}
-		}
-	}
 
 	// expand cols
 	emptyColIndexes := []int{}
@@ -107,21 +99,8 @@ func createGridUniverse(input []string) [][]byte {
 			emptyColIndexes = append(emptyColIndexes, j)
 		}
 	}
-	newGrid := [][]byte{}
-	for _, row := range grid {
-		newRow := []byte{}
-		for j, b := range row {
-			newRow = append(newRow, b)
-			if utils.Contains(emptyColIndexes, j) {
-				for n := 0; n < 1000000-1; n++ {
-					newRow = append(newRow, b)
-				}
-			}
-		}
-		newGrid = append(newGrid, newRow)
-	}
 
-	return newGrid
+	return grid, emptyRowIndexes, emptyColIndexes
 }
 
 func isEmptyRow(mat [][]byte, rowIndex int) bool {
@@ -143,9 +122,13 @@ func isEmptyCol(mat [][]byte, colIndex int) bool {
 }
 
 func printMat(mat [][]byte) {
-	for _, row := range mat {
-		for _, b := range row {
-			fmt.Printf("%c", b)
+	for i, row := range mat {
+		for j, b := range row {
+			if b == '#' {
+				fmt.Printf("(%d, %d)", i, j)
+			} else {
+				fmt.Print("[    ]")
+			}
 		}
 		fmt.Println()
 	}

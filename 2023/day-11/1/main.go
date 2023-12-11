@@ -37,10 +37,11 @@ func solve(input []string) int {
 	}
 
 	sumShortest := 0
-	for _, galaxy := range galaxies {
+	for i, g1 := range galaxies {
 		// closest := findClosest(galaxies, galaxy)
-		for _, g2 := range galaxies {
-			sumShortest += distance(galaxy, g2)
+		for j, g2 := range galaxies {
+			sumShortest += distance(g1, g2)
+			fmt.Println("between", i+1, j+1, distance(g1, g2))
 		}
 		// fmt.Println("Closest to", galaxy, "is", closest)
 	}
