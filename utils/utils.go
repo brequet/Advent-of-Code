@@ -93,3 +93,10 @@ func PrintMat[T any](mat [][]T) {
 		fmt.Println()
 	}
 }
+
+func SumAll(nums []int) (res int) {
+	for _, n := range nums {
+		res += n
+	}
+	return res
+}
