@@ -3,6 +3,7 @@ package main
 import (
 	"aoc-2023-go/utils"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -20,12 +21,15 @@ func main() {
 }
 
 func solve(input []string) (arrangementCount int) {
+	cache = map[string]int{}
 	for _, line := range input {
 		arrangementCount += countArrangementInLine(line)
 	}
 
 	return arrangementCount
 }
+
+var cache map[string]int
 
 func countArrangementInLine(line string) int {
 	s := strings.Split(line, " ")
@@ -49,7 +53,16 @@ func printTest(ns []int) string {
 	return "[" + strings.Join(utils.Map(ns, func(n int) string { return fmt.Sprintf("'%d'", n) }), ", ") + "]"
 }
 
+func intToString(nums []int) string {
+	return strings.Join(utils.Map(nums, func(n int) string { return strconv.Itoa(n) }), ",")
+}
+
 func countArrangement(springs []byte, contiguousGroups []int) (arrangementCount int) {
+	key := string(springs) + "-" + intToString(contiguousGroups)
+	val, ok := cache[key]
+	if ok {
+		return val
+	}
 	// fmt.Println("count in ", string(springs), contiguousGroups, "      (size", utils.SumAll(contiguousGroups), "versus", len(springs), ")")
 	if len(contiguousGroups) == 0 || utils.SumAll(contiguousGroups) > len(springs) {
 		// fmt.Println("\t->0")
@@ -68,6 +81,7 @@ func countArrangement(springs []byte, contiguousGroups []int) (arrangementCount 
 		arrangementCount += countArrangement([]byte(arrangementSprings), t)
 	}
 
+	cache[key] = arrangementCount
 	return arrangementCount
 }
 
