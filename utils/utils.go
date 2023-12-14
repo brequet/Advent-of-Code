@@ -26,6 +26,24 @@ func GetInputAsSlice(filePath string) (res []string) {
 	return res
 }
 
+func GetInput(filePath string) (input [][]byte) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		input = append(input, []byte(scanner.Text()))
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+	return input
+}
+
 func Map[T, O any](things []T, mapper func(thing T) O) []O {
 	result := make([]O, 0, len(things))
 	for _, thing := range things {
@@ -94,9 +112,81 @@ func PrintMat[T any](mat [][]T) {
 	}
 }
 
+func MatToStr[T any](mat [][]T, toStr func(t T) string) (res string) {
+	for _, row := range mat {
+		for _, node := range row {
+			res += toStr(node)
+		}
+		res += "\n"
+	}
+	return res
+}
+
 func SumAll(nums []int) (res int) {
 	for _, n := range nums {
 		res += n
 	}
 	return res
+}
+
+func Min(a, b int) int {
+	if a > b {
+		return b
+	} else {
+		return a
+	}
+}
+
+func ByteToStr(b byte) string {
+	return string(b)
+}
+
+func CopyMat[T any](matrix [][]T) [][]T {
+	n := len(matrix)
+	m := len(matrix[0])
+	duplicate := make([][]T, n)
+	data := make([]T, n*m)
+	for i := range matrix {
+		start := i * m
+		end := start + m
+		duplicate[i] = data[start:end:end]
+		copy(duplicate[i], matrix[i])
+	}
+	return duplicate
+}
+
+func MatTranspose[T any](matrix [][]T) [][]T {
+	rows := len(matrix)
+	cols := len(matrix[0])
+
+	transposed := make([][]T, cols)
+	for i := range transposed {
+		transposed[i] = make([]T, rows)
+	}
+
+	for i := 0; i < rows; i++ {
+		for j := 0; j < cols; j++ {
+			transposed[j][i] = matrix[i][j]
+		}
+	}
+
+	return transposed
+}
+
+func MatRotate[T any](matrix [][]T) [][]T {
+	// Transpose the matrix
+	for i := 0; i < len(matrix); i++ {
+		for j := i; j < len(matrix); j++ {
+			matrix[j][i], matrix[i][j] = matrix[i][j], matrix[j][i]
+		}
+	}
+
+	// Reverse each row
+	for i := 0; i < len(matrix); i++ {
+		for j := 0; j < len(matrix)/2; j++ {
+			matrix[i][j], matrix[i][len(matrix)-j-1] = matrix[i][len(matrix)-j-1], matrix[i][j]
+		}
+	}
+
+	return matrix
 }
