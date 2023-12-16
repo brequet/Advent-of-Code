@@ -136,6 +136,13 @@ func Min(a, b int) int {
 		return a
 	}
 }
+func Max(a, b int) int {
+	if a > b {
+		return a
+	} else {
+		return b
+	}
+}
 
 func ByteToStr(b byte) string {
 	return string(b)
