@@ -44,6 +44,29 @@ func GetInput(filePath string) (input [][]byte) {
 	return input
 }
 
+func GetInputInt(filePath string) (input [][]int) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		row := []int{}
+		for _, char := range scanner.Text() {
+			n, _ := strconv.Atoi(string(char))
+			row = append(row, n)
+		}
+		input = append(input, row)
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+	return input
+}
+
 func Map[T, O any](things []T, mapper func(thing T) O) []O {
 	result := make([]O, 0, len(things))
 	for _, thing := range things {
