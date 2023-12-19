@@ -1,36 +1,14 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"strconv"
-	"strings"
+	"github.com/gookit/color"
 )
 
 func main() {
-	d, s := getDirAndStep("R 6 (#70c710)")
-	fmt.Println("testing getDirAndStep", d, s)
-}
-
-func getDirAndStep(line string) (dir string, steps int64) {
-	entry := strings.Split(line, "#")[1]
-	stepsHex := entry[:5]
-	steps, _ = strconv.ParseInt(stepsHex, 16, 64)
-	dir = getDir(entry[5])
-	return dir, steps
-}
-
-func getDir(n byte) string {
-	switch n {
-	case '0':
-		return "R"
-	case '1':
-		return "D"
-	case '2':
-		return "L"
-	case '3':
-		return "U"
-	}
-	log.Fatal("NOPE")
-	return ""
+	color.Red.Println("This text is red")
+	color.Green.Println("This text is green")
+	color.Yellow.Println("This text is yellow")
+	color.Blue.Println("This text is blue")
+	color.Magenta.Println("This text is magenta")
+	color.Cyan.Println("This text is cyan")
 }

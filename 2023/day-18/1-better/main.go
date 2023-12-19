@@ -53,7 +53,6 @@ func main() {
 
 	interiorPoints := area - boundaryPoints/2 + 1
 
-	// fmt.Println(interiorPoints + boundaryPoints)
 	result := interiorPoints + boundaryPoints
 	fmt.Printf("Result %d (expected %d)\n", result, EXPECTED_RESULT)
 }
